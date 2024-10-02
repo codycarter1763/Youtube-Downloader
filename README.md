@@ -1,1 +1,2 @@
-# Youtube-Downloader
+# Youtube Downloader
+<h4>This is a personal project I created to learn Python. The goal is to safely download videos from YouTube without relying on sketchy websites, while also building a practical application that I can use. It’s currently a work in progress, and I plan to add a GUI soon, turning it into a standalone application that you can install and run. Currently, the application uses the yt-dlp library as a way to download videos from YouTube. But, I intend to add functionality for the end user to set quality, download location, and file format. </h4>
