@@ -126,38 +126,36 @@ def download_thread_init(url):
 def load_thumbnail_and_title(url):
     global video_title_label
     try:
-        # Setup yt_dlp for metadata extraction
         ydl_opts = {
-            'quiet': True,
-            'skip_download': True,
-            'noplaylist': True,
-        }
+    'quiet': True,
+    'skip_download': True,
+    'noplaylist': True,
+    'extract_flat': False,
+    'force_generic_extractor': False,
+    'format': 'best',
+}
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=False)
-            title = info_dict.get('title', 'No Title Found')
+            title = info_dict.get('title') or 'No Title Found'
             video_id = info_dict.get('id')
 
-        # Update the video title label
+        # Update title label correctly
         video_title_label.configure(text=title)
 
-        # Construct the thumbnail URL and download the image
+        # Load thumbnail
         thumb_url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
         response = requests.get(thumb_url)
-        img_data = response.content
-
-        # Open and resize the image
-        img = Image.open(BytesIO(img_data))
+        img = Image.open(BytesIO(response.content))
         img.thumbnail((320, 180))
 
-        # Convert for tkinter
         global thumbnail_image
         thumbnail_image = ImageTk.PhotoImage(img)
-
-        # Display the thumbnail
         thumbnail_label.configure(image=thumbnail_image, text="")
 
     except Exception as e:
         messagebox.showerror("Error", f"Failed to load thumbnail/title: {e}")
+
 
 def resource_path(relative_path):
     try:
@@ -173,7 +171,7 @@ def gui():
     global thumbnail_label, thumbnail_image, selected_quality, video_title_label
 
     root = customtkinter.CTk()
-    root.geometry("700x700")
+    root.geometry("700x800")
     root.title("YouTube Video Downloader")
 
     # ------------------ ICON SETUP ------------------
