@@ -1,2 +1,16 @@
-# Youtube Downloader
-<h4>This is a personal project I created to learn Python. The goal is to safely download videos from YouTube without relying on sketchy websites, while also building a practical application that I can use. It’s currently a work in progress, and I plan to turn it into a standalone application that you can install and run. Currently, the application uses the yt-dlp library as a way to download videos from YouTube. But, I intend to add functionality for the end user to set quality, download location, and file format. </h4>
+# Youtube Downloader Application
+![image](https://github.com/user-attachments/assets/cc5778cf-cd68-459f-a0ff-7a673b9092d4)
+
+# About
+A standalone application using Python, yt-dlp, and CustomTkinter to safely download Youtube videos.
+
+Notable features include:
+- Supports common video formats such as MP4 and WEBM, and common audio formats including WAV, MP3, M4A, and AAC
+- Allows user to select a resolution for exporting
+- Lightweight and fast
+- Viewable download progress and speed
+- FFmpeg support allows for reliable, high quality downloads and processing
+
+# How To Install
+Installation is very simple and straightforward.
+1. Download the latest release from the releases tab
