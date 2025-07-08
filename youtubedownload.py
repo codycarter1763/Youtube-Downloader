@@ -6,6 +6,8 @@ import threading
 from PIL import Image, ImageTk
 import requests
 from io import BytesIO
+from tkinter import PhotoImage
+import sys
 
 def list_formats(url):
     try:
@@ -36,21 +38,20 @@ def download_video(url):
         return
 
     try:
-        # Fetch the selected format
         chosen_format = selected_format.get()
+        chosen_quality = selected_quality.get()
+        height = chosen_quality.replace('p', '')
 
-        # yt-dlp options
         ydl_opts = {
             'outtmpl': os.path.join(destination_folder, '%(title)s.%(ext)s'),
             'progress_hooks': [progress_hook],
             'noplaylist': True,
         }
 
-        # Define audio formats for audio-only handling
         audio_formats = ['wav', 'mp3', 'm4a', 'aac']
 
         if chosen_format in audio_formats:
-            # Audio-only download and extract to chosen format
+            # Audio-only download
             ydl_opts.update({
                 'format': 'bestaudio/best',
                 'postprocessors': [{
@@ -59,15 +60,16 @@ def download_video(url):
                 }],
             })
         else:
-            # Video + audio download enforcing selected video format
-            format_map = {
-                'mp4': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',
-                'webm': 'bestvideo[ext=webm]+bestaudio[ext=webm]/best[ext=webm]',
-            }
-            ydl_opts['format'] = format_map.get(chosen_format, 'bestvideo+bestaudio/best')
-            ydl_opts['merge_output_format'] = chosen_format  # Enforce output format
+            # Video + audio download with enforced quality
+            if chosen_format in ['mp4', 'webm']:
+                ydl_opts['format'] = (
+                    f"bestvideo[height<={height}][ext={chosen_format}]+"
+                    f"bestaudio[ext=m4a]/best[height<={height}][ext={chosen_format}]"
+                )
+                ydl_opts['merge_output_format'] = chosen_format
+            else:
+                ydl_opts['format'] = f"bestvideo[height<={height}]+bestaudio/best[height<={height}]"
 
-        # Download using yt-dlp
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
@@ -122,6 +124,7 @@ def download_thread_init(url):
 
 
 def load_thumbnail_and_title(url):
+    global video_title_label
     try:
         # Setup yt_dlp for metadata extraction
         ydl_opts = {
@@ -156,22 +159,42 @@ def load_thumbnail_and_title(url):
     except Exception as e:
         messagebox.showerror("Error", f"Failed to load thumbnail/title: {e}")
 
+def resource_path(relative_path):
+    try:
+        return os.path.join(sys._MEIPASS, relative_path)
+    except Exception:
+        return os.path.join(os.path.abspath("."), relative_path)
+    
 def gui():
     customtkinter.set_appearance_mode("dark")
     customtkinter.set_default_color_theme("dark-blue")
 
     global root, percent_var, speed_var, selected_format, progress_bar, download_label, speed_label
-    global thumbnail_label, thumbnail_image
+    global thumbnail_label, thumbnail_image, selected_quality, video_title_label
 
-    root = customtkinter.CTk()  # Now `root` is global so we can call `root.update_idletasks()` later
-    root.geometry("700x800")
-    root.title("Youtube Video Downloader")
+    root = customtkinter.CTk()
+    root.geometry("700x700")
+    root.title("YouTube Video Downloader")
+
+    # ------------------ ICON SETUP ------------------
+    icon_path = resource_path("YouTube.ico")
+    if os.path.exists(icon_path):
+        try:
+            root.iconbitmap(icon_path)
+        except Exception:
+            try:
+                icon = PhotoImage(file=icon_path)
+                root.iconphoto(True, icon)
+            except Exception as e:
+                print(f"Failed to set window icon: {e}")
+    # ---------------- END ICON SETUP ----------------
 
     percent_var = StringVar()
     speed_var = StringVar()
     selected_format = StringVar(value="mp4")
+    selected_quality = StringVar(value="1080p")
 
-    label = customtkinter.CTkLabel(master=root, text="Youtube Video Downloader", font=("Roboto", 24))
+    label = customtkinter.CTkLabel(master=root, text="YouTube Video Downloader", font=("Roboto", 24))
     label.pack(pady=12, padx=10)
 
     label = customtkinter.CTkLabel(master=root, text="By Cody Carter", font=("Roboto", 18))
@@ -180,26 +203,22 @@ def gui():
     frame = customtkinter.CTkFrame(master=root)
     frame.pack(pady=20, padx=60, fill="both", expand=True)
 
-    global video_title_label, progress_bar, download_label, speed_label
+    global video_title_label
     video_title_label = customtkinter.CTkLabel(master=frame, text="", font=("Roboto", 16))
     video_title_label.pack(pady=5)
 
     thumbnail_label = customtkinter.CTkLabel(master=frame, text="")
     thumbnail_label.pack(pady=10)
 
-    # Entry for URL
     url_entry = customtkinter.CTkEntry(master=frame, placeholder_text="Enter YouTube URL")
     url_entry.pack(pady=12, padx=10)
 
-    # Button for destination folder
     folder_button = customtkinter.CTkButton(master=frame, text="Set Destination Folder", command=set_destination_folder)
     folder_button.pack(pady=12, padx=10)
 
-    # Progress bar to show download progress
     progress_bar = customtkinter.CTkProgressBar(master=frame)
-    progress_bar.set(0)  # Initialize but do not pack
+    progress_bar.set(0)
 
-    # Label to show download speed
     speed_label = customtkinter.CTkLabel(master=frame, textvariable=speed_var, font=("Roboto", 12))
     download_label = customtkinter.CTkLabel(master=frame, textvariable=percent_var, font=("Roboto", 12))
 
@@ -211,19 +230,38 @@ def gui():
             download_thread_init(url)
             load_thumbnail_and_title(url)
 
-    
-    format_label = customtkinter.CTkLabel(master=frame, text="Select Format:")
-    format_label.pack(pady=5, padx=10)
+    # Combined frame for horizontal alignment
+    selection_frame = customtkinter.CTkFrame(master=frame, fg_color="transparent")
+    selection_frame.pack(pady=10)
+
+    # Format section inside selection_frame
+    format_frame = customtkinter.CTkFrame(master=selection_frame)
+    format_frame.pack(side="left", padx=20)
+
+    format_label = customtkinter.CTkLabel(master=format_frame, text="Select Format:", font=("Roboto", 14))
+    format_label.pack(pady=5)
 
     format_options = ['mp4', 'webm', 'wav', 'mp3', 'm4a', 'aac']
-    format_choose = customtkinter.CTkOptionMenu(master=frame, variable=selected_format, values=format_options)
-    format_choose.pack(pady=12, padx=10)
+    format_choose = customtkinter.CTkOptionMenu(master=format_frame, variable=selected_format, values=format_options)
+    format_choose.pack(pady=5)
 
-    # Download button
+    # Quality section inside selection_frame
+    quality_frame = customtkinter.CTkFrame(master=selection_frame)
+    quality_frame.pack(side="left", padx=20)
+
+    quality_label = customtkinter.CTkLabel(master=quality_frame, text="Select Resolution:", font=("Roboto", 14))
+    quality_label.pack(pady=5)
+
+    quality_options = ['360p', '480p', '720p', '1080p', '1440p', '2160p']
+    quality_choose = customtkinter.CTkOptionMenu(master=quality_frame, variable=selected_quality, values=quality_options)
+    quality_choose.pack(pady=5)
+
     download_button = customtkinter.CTkButton(master=frame, text="Download Media", command=start_download)
     download_button.pack(pady=12, padx=10)
 
     root.mainloop()
 
+
 if __name__ == "__main__":
     gui()
+
