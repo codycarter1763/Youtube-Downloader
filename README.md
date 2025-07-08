@@ -11,6 +11,27 @@ Notable features include:
 - Viewable download progress and speed
 - FFmpeg support allows for reliable, high quality downloads and processing
 
-# How To Install
-Installation is very simple and straightforward.
+# How To Install On Windows
+## FFmpeg Installation
+For high quality downloads, FFmpeg is called on to help yt-dlp. It is highly recommended for optimum operation.
+1. Navigate to [FFmpeg Downloads]([https://example.com](https://www.gyan.dev/ffmpeg/builds/)) on this site
+2. Download latest version of 'ffmpeg-git-essentials.7z'. The full version also works, but the essentials version includes all the functionality for the Youtube Downloader
+3. Extract files to a safe location of your choosing
+4. Press the Windows key and search 'Environmental Variables' and click it
+5. Click on 'Environmental Variables' and scroll down to 'System Variables' and click edit on 'path' </br>
+![image](https://github.com/user-attachments/assets/669efdb5-b578-4fdf-bb5f-11328cbf011b)
+6. Click 'new' and go to location of your FFmpeg extract, right click, and select 'copy as path'
+7. Paste into the 'path' variable and click 'OK'
+8. FFmpeg should be installed for yt-dlp usage!
+
+Installation is very simple and straightforward once FFmpeg is installed.
 1. Download the latest release from the releases tab
+2. Extract the files from ZIP
+3. Navigate to 'dist', open 'youtubedownload'
+4. Find 'youtubedownload.exe' and open to use application
+
+# How To Install On MacOS
+
+# Closing
+Thank you for using my program!
+Bug reports or feedback is always appreciated!
